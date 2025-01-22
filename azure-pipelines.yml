@@ -2,10 +2,14 @@ trigger:
 - main
 
 pool:
-  name: myAgentPool # Agent pool ismi buraya yazılmalı
+  name: myAgentPool # Agent pool ismi 
 
 steps:
+- checkout: self # Repository'den kodları indirir
+  displayName: 'Checkout repository'
+
 - script: |
+    chmod +x ./hello_world.sh # Çalıştırma izni ekler
     echo "Pipeline çalışıyor..."
     ./hello_world.sh
   displayName: 'Run Hello World Script'
