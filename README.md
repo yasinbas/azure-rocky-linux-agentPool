@@ -1,84 +1,131 @@
-### Azure DevOps Agent Kurulum Rehberi (Rocky Linux)
+# Azure DevOps Agent Kurulum Rehberi (Rocky Linux)
 
-Bu rehber, Rocky Linux üzerinde Azure DevOps Agent kurulumunu adım adım açıklamaktadır.
+Bu rehber, Rocky Linux üzerinde Azure DevOps Agent kurulumunu ve temel yapılandırmasını adım adım açıklamaktadır.
 
 ---
 
-## Ön Koşullar:
-1. **Sistemin güncel olduğundan emin olun:**
+## Ön Koşullar
+
+1. **Sistemin Güncellenmesi**
    ```bash
    sudo dnf update -y
    ```
-   *Neden*: Sistem güncellemeleri, potansiyel hataları önler ve güvenliği artırır.
+   Sistem paketlerinin en güncel versiyonlarını yükleyerek potansiyel uyumsuzlukları önler.
 
-2. **Yeni Kullanıcı Oluşturma:** Azure DevOps Agent için ayrı bir kullanıcı oluşturun.
+2. **Yeni Kullanıcı Oluşturma**
    ```bash
    sudo useradd -m azureagent
    sudo passwd azureagent
    ```
-   *Neden*: Root yetkilerini doğrudan kullanmak yerine ayrı bir kullanıcı güvenlik açısından önemlidir.
+   Azure DevOps Agent için ayrı bir kullanıcı oluşturun.
 
-3. **Kullanıcıya Gerekli Yetkileri Verme:**
+3. **Kullanıcıya Yetki Verme**
    ```bash
    sudo usermod -aG wheel azureagent
    ```
-   *Neden*: Kullanıcının gerekli yönetimsel işlemleri gerçekleştirmesi için yetki verir.
+   Yeni oluşturulan kullanıcıya yönetici yetkileri sağlayın.
 
 ---
 
-## Azure DevOps Agent Kurulum Adımları:
+## Azure DevOps Agent Kurulum Adımları
 
-1. **Agent Paketini İndirme:**
+1. **Agent Paketini İndirme**
    ```bash
    curl -O https://vstsagentpackage.azureedge.net/agent/3.225.0/vsts-agent-linux-x64-3.225.0.tar.gz
    ```
-   *Neden*: Azure DevOps Agent'ın kurulum dosyasını indirir.
+   ![Agent İndirme](https://prnt.sc/V6YqPHPjl5_5)
 
-2. **Agent Dosyasını Çıkarma:**
+2. **Agent Dosyasını Çıkarma**
    ```bash
    mkdir -p /home/azureagent/azagent
    tar -xzf vsts-agent-linux-x64-3.225.0.tar.gz -C /home/azureagent/azagent
    ```
-   *Neden*: Dosyayı kurulum için hazırlamak gerekir.
+   ![Dosya Çıkarma](https://prnt.sc/mdBxDAru1GUmg)
 
-3. **Kullanıcı Sahipliğini Ayarlama:**
+3. **Dosya İzinlerini Ayarlama**
    ```bash
    sudo chown -R azureagent:azureagent /home/azureagent/azagent
    ```
-   *Neden*: Doğru izinlerin sağlanması gerekir.
 
-4. **Agent'ı Yapılandırma:**
+4. **Agent Yapılandırması**
    ```bash
    su - azureagent
    cd /home/azureagent/azagent
    ./config.sh
    ```
-   *Neden*: Azure DevOps ile bağlantı kurmak için yapılandırma gereklidir.
+   ![Agent Yapılandırma](https://prnt.sc/FLvfpFFmMt_v)
 
-5. **Agent Hizmetini Başlatma:**
+5. **Agent Hizmetini Başlatma**
    ```bash
    sudo ./svc.sh install
    sudo ./svc.sh start
    ```
-   *Neden*: Agent'ı bir sistem hizmeti olarak çalıştırır.
+   Agent'ı bir hizmet olarak sistemde başlatın. 
+
+![Agent Status](https://prnt.sc/y8Y_TXokKxRr)
 
 ---
 
-## Kontrol ve Doğrulama:
+## Azure DevOps Pipeline Testi
 
-1. **Agent Durumunu Kontrol Etme:**
-   ```bash
-   systemctl status vsts.agent.*
+1. **Pipeline Dosyası (.yaml) Oluşturma**
+
+   Azure DevOps portalında yeni bir pipeline oluşturun ve aşağıdaki örnek `azure-pipelines.yaml` dosyasını kullanın:
+
+   ```yaml
+   trigger:
+     - main
+
+   pool:
+     name: myAgentPool
+
+   steps:
+     - script: |
+         echo "Pipeline çalışıyor..."
+         ./hello_world.sh
+       displayName: 'Run Hello World Script'
    ```
-   *Neden*: Agent'ın düzgün çalışıp çalışmadığını kontrol eder.
 
-2. **Azure DevOps Portal Doğrulaması:**
-   Azure DevOps portalına giderek Agent'ın bağlı olup olmadığını kontrol edin.
+2. **Test Scripti Ekleyin**
+
+   `hello_world.sh` dosyasını oluşturun ve aşağıdaki içeriği ekleyin:
+
+   ```bash
+   #!/bin/bash
+   echo "Hello, World! Azure DevOps pipeline başarıyla çalışıyor."
+   ```
+
+   Script'i çalıştırılabilir hale getirin:
+   ```bash
+   chmod +x hello_world.sh
+   ```
+
+3. **Pipeline'ı Çalıştırın**
+
+   Azure DevOps portalında pipeline'ı başlatın ve aşağıdaki çıktıyı doğrulayın:
+   ```
+   Pipeline çalışıyor...
+   Hello, World! Azure DevOps pipeline başarıyla çalışıyor.
+   ```
+
+   ![Pipeline Çalışıyor](https://prnt.sc/977gFSyqlhm5)
 
 ---
 
-Bu adımlar takip edilerek Rocky Linux üzerinde Azure DevOps Agent kurulumu tamamlanabilir. Herhangi bir sorunla karşılaşırsanız, destek almak için iletişime geçebilirsiniz.
+## Doğrulama ve Kontrol
 
+- **Agent Durumunu Kontrol Etme**
+  ```bash
+  systemctl status vsts.agent.*
+  ```
+  Agent hizmetinin çalışır durumda olduğunu doğrulayın.
 
+- **Azure DevOps Portalında Agent'ı Görüntüleme**
+  Azure DevOps portalına giderek agent'ın bağlı ve kullanılabilir durumda olduğunu kontrol edin.
+  ![Agent Portal Görünümü](https://prnt.sc/wTDULGlUl5BN)
 
+---
 
+## Sonuç
+
+Bu adımları takip ederek Rocky Linux üzerinde Azure DevOps Agent kurulumunu tamamladınız ve temel pipeline testini başarıyla gerçekleştirdiniz. İlerleyen süreçte pipeline'ınızı özelleştirerek projelerinize entegre edebilirsiniz. Herhangi bir sorunla karşılaşırsanız, lütfen destek ekibinizle iletişime geçin.
