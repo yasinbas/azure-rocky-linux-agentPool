@@ -1,0 +1,11 @@
+trigger:
+- main
+
+pool:
+  name: myAgentPool # Agent pool ismi buraya yazılmalı
+
+steps:
+- script: |
+    echo "Pipeline çalışıyor..."
+    ./hello_world.sh
+  displayName: 'Run Hello World Script'
